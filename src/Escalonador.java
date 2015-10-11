@@ -116,6 +116,55 @@ public class Escalonador {
 		buffQuantumFileReader.close();
 	}
 	
+	public static void escalonar()
+	{
+		int indQuantum;
+		String titulo = "TESTE";
+		
+		//1 - Pegar o processo de maior prioridade - Menor da fila
+		Iterator<BCP> i = filaProntos.iterator();
+		if(i.hasNext())
+		{
+			//Pegar o primeiro da fila, se ela não estiver vazia
+			BCP prox = i.next();
+			
+			//Pegar o título do processo
+			
+			//Transferir o contexto do BCP para o processador
+			Processador.setContexto(prox);
+			
+			//Mudar o estado para EXECUTANDO
+			prox.state = Processos.EXECUTANDO;
+			
+			//Em seguida executar um quantum de instruções
+			for(indQuantum = 0; indQuantum < _quantum; indQuantum++)
+			{
+				try
+				{
+					Processador.processar();
+				}
+				catch(Exception e)
+				{
+					if(e.getMessage().equals("E"))
+					{
+						System.out.println("E/S iniciada em " + titulo);
+					}
+					
+					if(e.getMessage().equals("S"))
+					{
+						System.out.println(titulo + " terminado. X = T. Y = T");
+					}
+				}
+			}
+		}
+		else
+		{
+			//Se a fila estiver vazia, tomar outra decisão
+			
+		}
+		
+	}
+	
 	public static void main(String[] args) throws IOException {
 		
 		//Inicializar conjuntos
