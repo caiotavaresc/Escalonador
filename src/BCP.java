@@ -1,8 +1,10 @@
 import java.util.*;
 
 //Classe que modela o bloco de controle de Processos
-public class BCP implements Comparable<BCP>{
+public class BCP{
 	
+	//Identificador unívoco do processo
+	int id;
 	//Contador de programa
 	int PC;
 	//Indicador de estado do processo
@@ -17,26 +19,10 @@ public class BCP implements Comparable<BCP>{
 	int Y;
 	
 	//Espaço contendo o código
-	List codigo;
+	List<String> codigo;
 	
-	//Método de comparação para poder ordenar a lista de processos prontos
-	//pela quantidade de créditos
-	public int compareTo(BCP o)
+	public boolean equals(BCP o)
 	{
-		//Inversão para trazer a maior prioridade primeiro
-		int retorno = o.creditos - this.creditos;
-		
-		//Heurística para casos de empate
-		//Em caso de empate, tem maior prioridade o processo
-		//que já está em execucao
-		if(retorno==0)
-		{
-			if(this.state == Processos.EXECUTANDO)
-				retorno = -1;
-			else
-				retorno = 1;
-		}
-		
-		return retorno;
+		return o.id==this.id;
 	}
 }

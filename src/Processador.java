@@ -20,13 +20,22 @@ public class Processador {
 		memoria = contexto.codigo;
 	}
 	
-	public static void processar()
+	public static void getContexto(BCP destino)
+	{
+		destino.PC = PC;
+		destino.X = X;
+		destino.Y = Y;
+		destino.codigo = memoria;
+	}
+	
+	public static void processar() throws Exception
 	{
 		//Ciclo de busca
 		IR = memoria.get(PC);
 		PC++;
 		
 		//Ciclo de execução
+		interpretarInstrucao();
 	}
 	
 	public static void interpretarInstrucao() throws Exception
@@ -39,12 +48,12 @@ public class Processador {
 		{
 		case 'X':
 			//Atribuição em X;
-			X = Integer.valueOf(IR.substring(1));
+			X = Integer.valueOf(IR.substring(2));
 			
 			break;
 		case 'Y':
 			//Atribuição em Y;
-			Y = Integer.valueOf(IR.substring(1));
+			Y = Integer.valueOf(IR.substring(2));
 			
 			break;
 		case 'C':

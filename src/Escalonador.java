@@ -5,8 +5,8 @@ import java.util.*;
 public class Escalonador {
 
 	//Filas de processos prontos e bloqueados
-	private static Collection<BCP> filaProntos;
-	private static Collection<BCP> filaBloqueados;
+	private static List<BCP> filaProntos;
+	private static List<BCP> filaBloqueados;
 	
 	//Variável que especifica o tamanho do quantum
 	private static int _quantum;
@@ -14,7 +14,7 @@ public class Escalonador {
 	//Método para inicializar as filas
 	public static void inicializaFilas()
 	{
-		filaProntos = new TreeSet<BCP>();
+		filaProntos = new ArrayList<BCP>();
 		filaBloqueados = new ArrayList<BCP>();
 	}
 	
@@ -94,7 +94,6 @@ public class Escalonador {
 					bcp_processo = Processos.createProcess(titulo, instrucoes, prioridade);
 					//O bcp vai para a fila de processos prontos
 					filaProntos.add(bcp_processo);
-					
 					//Limpar instruções e fechar o buffer
 					instrucoes.clear();
 					myBuffer.close();
@@ -103,6 +102,18 @@ public class Escalonador {
 		}
 		//Fechar o buffer de leitura de prioridades
 		bufferedPriorityReader.close();
+		
+		//Ordenar a lista por prioridade
+		Collections.sort(filaProntos, new CompareCreditos<BCP>());
+		//Imprimir os processos conforme a prioridade
+		Iterator<BCP> it = filaProntos.iterator();
+		while(it.hasNext())
+		{
+			bcp_processo = it.next();
+			titulo = Processos.getTitulo(bcp_processo);
+			
+			System.out.println("Carregando "+titulo);
+		}
 		
 		//Ler o quantum
 		FileReader quantumFileReader;
@@ -119,7 +130,7 @@ public class Escalonador {
 	public static void escalonar()
 	{
 		int indQuantum;
-		String titulo = "TESTE";
+		String titulo;;
 		
 		//1 - Pegar o processo de maior prioridade - Menor da fila
 		Iterator<BCP> i = filaProntos.iterator();
@@ -129,9 +140,15 @@ public class Escalonador {
 			BCP prox = i.next();
 			
 			//Pegar o título do processo
+			titulo = Processos.getTitulo(prox);
+			
+			System.out.println("Executando " + titulo);
 			
 			//Transferir o contexto do BCP para o processador
 			Processador.setContexto(prox);
+			
+			//Ao começar a rodar, o processo perde um crédito
+			prox.creditos--;
 			
 			//Mudar o estado para EXECUTANDO
 			prox.state = Processos.EXECUTANDO;
@@ -148,19 +165,49 @@ public class Escalonador {
 					if(e.getMessage().equals("E"))
 					{
 						System.out.println("E/S iniciada em " + titulo);
+						System.out.println("Interrompendo "+titulo+" após "+ (indQuantum+1) +" instruções");
+						
+						//Salvar o contexto
+						Processador.getContexto(prox);
+						
+						//Trocar o estado do processo para bloqueado
+						prox.state = Processos.BLOQUEADO;
+						
+						//Tirar o processo da fila de prontos e pôr na fila de bloqueados
+						filaProntos.remove(prox);
+						filaBloqueados.add(prox);
+						
+						//Interromper o quantum
+						break;
 					}
 					
 					if(e.getMessage().equals("S"))
 					{
-						System.out.println(titulo + " terminado. X = T. Y = T");
+						System.out.println(titulo + " terminado. X = "+Processador.X+". Y = "+Processador.Y);
+						
+						//Remover o processo da tabela de processos
+						Processos.tabelaDeProcessos.remove(prox);
+						
+						//Remover o processo da fila de prontos
+						filaProntos.remove(prox);
 					}
 				}
 			}
+			//Se a execução parou porque o quantum terminou, então
+			if(indQuantum==_quantum)
+			{
+				System.out.println("Interrompendo "+titulo+" após "+_quantum+" instruções");
+				
+				//Salvar o contexto
+				Processador.getContexto(prox);
+			}
+			//reordenar a fila
+			Collections.sort(filaProntos, new CompareCreditos<BCP>());
 		}
 		else
 		{
 			//Se a fila estiver vazia, tomar outra decisão
-			
+			System.out.println("Só tem bloqueados");
 		}
 		
 	}
@@ -173,5 +220,9 @@ public class Escalonador {
 		
 		//Leitura e carregamento dos processos em memória
 		carregaProcessos();
+		
+		//Escalonar enquanto houver processos na tabela de processos
+		while(!Processos.tabelaDeProcessos.isEmpty())
+			escalonar();
 	}
 }
