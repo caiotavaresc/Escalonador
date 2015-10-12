@@ -1,10 +1,9 @@
 import java.util.List;
 
-/*Essa classe é uma generalização que simboliza o processador
- * Não dividimos as unidades (UC, ULA ...) nem implementamos os ciclos
- * O gerenciamento de memória é feito dentro do processo e não dentro de
- * uma "memória" em algum lugar */
-import java.util.*;
+/*Essa classe eh uma generalizacao que simboliza o processador
+ * Nao dividimos as unidades (UC, ULA ...) nem implementamos os ciclos
+ * O gerenciamento de memoria eh feito dentro do processo e nï¿½o dentro de
+ * uma "memoria" em algum lugar */
 
 public class Processador {
 
@@ -34,40 +33,40 @@ public class Processador {
 		IR = memoria.get(PC);
 		PC++;
 		
-		//Ciclo de execução
+		//Ciclo de execucao
 		interpretarInstrucao();
 	}
 	
 	public static void interpretarInstrucao() throws Exception
 	{
-		//Validar a instrução pelo primeiro caractere
+		//Validar a instrucao pelo primeiro caractere
 		char opt;
 		opt = IR.charAt(0);
 		
 		switch(opt)
 		{
 		case 'X':
-			//Atribuição em X;
+			//Atribuicao em X;
 			X = Integer.valueOf(IR.substring(2));
 			
 			break;
 		case 'Y':
-			//Atribuição em Y;
+			//Atribuido em Y;
 			Y = Integer.valueOf(IR.substring(2));
 			
 			break;
 		case 'C':
-			//Execução de um Comando qualquer;
+			//Execucao de um Comando qualquer;
 			break;
 		case 'E':
-			//Operação de Entrada e Saída;
-			//A exceção significa uma chamada ao sistema, passando o código E
-			//Que significa tratamento de exceção.
+			//Operacao de Entrada e Saida;
+			//A excecaoo significa uma chamada ao sistema, passando o codigo E
+			//Que significa tratamento de excecao.
 			throw new Exception("E");
 			
 		case 'S':
 			//Saida do programa
-			//A exceção significa uma chamada ao sistema, passando o código S
+			//A excecao significa uma chamada ao sistema, passando o cï¿½digo S
 			//Que significa fim de programa.
 			throw new Exception("S");
 		}

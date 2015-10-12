@@ -10,17 +10,19 @@ public class Processos {
 	public static final int PRONTO = 0;
 	public static final int EXECUTANDO = 1;
 	public static final int BLOQUEADO = 2;
+        public static final int FINALIZADO = 3;
+        
 	
-	//Identificador crescente e único do processo
+	//Identificador crescente e ï¿½nico do processo
 	public static int lastInd;
 	
-	//Método que inicializa a tabela
+	//Mï¿½todo que inicializa a tabela
 	public static void inicializaTabela()
 	{
 		tabelaDeProcessos = new HashMap<BCP, String>();
 	}
 	
-	//Método para criar um novo processo
+	//Mï¿½todo para criar um novo processo
 	public static BCP createProcess(String titulo, List<String> instrucoes, int prioridade)
 	{				
 		//Criar o BCP

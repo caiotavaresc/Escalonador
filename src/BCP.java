@@ -3,7 +3,7 @@ import java.util.*;
 //Classe que modela o bloco de controle de Processos
 public class BCP{
 	
-	//Identificador unívoco do processo
+	//Identificador unï¿½voco do processo
 	int id;
 	//Contador de programa
 	int PC;
@@ -11,14 +11,13 @@ public class BCP{
 	int state;
 	//Prioridade do processo
 	int prioridade;
-	//Número de créditos restantes
+	//Numero de crï¿½ditos restantes
 	int creditos;
-	
-	//Registradores de uso genérico
+	//Registradores de uso genï¿½rico
 	int X;
 	int Y;
 	
-	//Espaço contendo o código
+	//Espaco contendo o codigo
 	List<String> codigo;
 	
 	public boolean equals(BCP o)
