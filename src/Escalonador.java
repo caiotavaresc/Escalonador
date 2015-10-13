@@ -17,7 +17,14 @@ public class Escalonador {
         filaProntos = new ArrayList<>();
         filaBloqueados = new ArrayList<>();
     }
-
+    
+    //Estatisticas
+    static int e_trocas=0;
+    static int e_instrucoes=0;
+    static int e_quantum=0;
+    static String tituloAnterior="";
+    static int e_processos=0;
+    
     //Metodo que carrega os processos na mem�ria
     public static void carregaProcessos() throws IOException {
         //Array de arquivos que sera retornado pelo metodo que lista todos os arquivos do diretorio
@@ -51,6 +58,9 @@ public class Escalonador {
         //Listar arquivos do diretorio
         arquivos = diretorio.listFiles();
 
+        //ESTATISTICAS
+        e_processos = arquivos.length-2;
+        
         instrucoes = new ArrayList<String>();
 
         priorityReader = new FileReader(prioridades);
@@ -125,19 +135,14 @@ public class Escalonador {
         //1 - Pegar o processo de maior prioridade - Menor da fila
         Iterator<BCP> i = filaProntos.iterator();
         if (i.hasNext()) {
+            
             //Pegar o primeiro da fila, se ela n�o estiver vazia
             prox = i.next();
            
             //Pegar o titulo do processo
             titulo = Processos.getTitulo(prox);
-
-            System.out.println("Executando " + titulo);
-
-            //Transferir o contexto do BCP para o processador
-            Processador.setContexto(prox);
-
-            //Ao comecar a rodar, o processo perde um credito
-            prox.creditos--;
+            if(!titulo.equals(tituloAnterior)) e_trocas++;
+            tituloAnterior = titulo;
 
             //Mudar o estado para EXECUTANDO
             prox.state = Processos.EXECUTANDO;
@@ -155,26 +160,37 @@ public class Escalonador {
                 }
                 //Caso nao existam, faz a redistribuicao
                 if (zerou){
+                    prox.state = Processos.PRONTO;
                     redistribuirCreditos();
                     return;
                 }
-                
                 prox.state = Processos.PRONTO;
             }
+            
+            System.out.println("Executando " + titulo);
+
+            //Transferir o contexto do BCP para o processador
+            Processador.setContexto(prox);
+
+            //Ao comecar a rodar, o processo perde um credito
+            prox.creditos--;
+
+            
 
                 //Decrementa o tempo de espera dos processos bloqueados e se terminou, devolve-os a fila de prontos
             //Isso deve acontecer antes que o processo em execucao seja terminado, pois ele pode acabar na fila de espera
             decrementarEspera();
-
+            e_quantum++;
             //Em seguida executar um quantum de instrucoes
             for (indQuantum = 0; indQuantum < _quantum; indQuantum++) {
+                
                 try {
                     Processador.processar();
                 } catch (Exception e) {
                     if (e.getMessage().equals("E")) {
                         System.out.println("E/S iniciada em " + titulo);
                         System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
-
+                        e_instrucoes+=indQuantum + 1;
                         //Salvar o contexto
                         Processador.getContexto(prox);
 
@@ -192,7 +208,7 @@ public class Escalonador {
                     if (e.getMessage().equals("S")) {
                         System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
                         System.out.println(titulo + " terminado. X = " + Processador.X + ". Y = " + Processador.Y);
-
+                        e_instrucoes+=indQuantum + 1;
                         //Remover o processo da tabela de processos
                         Processos.tabelaDeProcessos.remove(prox);
 
@@ -206,7 +222,7 @@ public class Escalonador {
             //Se a execucao parou porque o quantum terminou e o processo nao foi finalizado, entao
             if (indQuantum == _quantum && prox.state != Processos.FINALIZADO) {
                 System.out.println("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
-
+                e_instrucoes+=indQuantum;
                 //Salvar o contexto
                 Processador.getContexto(prox);
             }
@@ -265,12 +281,14 @@ public class Escalonador {
         inicializaFilas();
         Processos.inicializaTabela();
 
-        //Leitura e carregamento dos processos em mem�ria
+        //Leitura e carregamento dos processos em memoria
         carregaProcessos();
 
         //Escalonar enquanto houver processos na tabela de processos
         while (!Processos.tabelaDeProcessos.isEmpty()) {
             escalonar();
         }
+        //Estatisticas
+        System.out.println("MEDIA DE TROCAS: " + String.format("%.1f",(double)e_trocas/e_processos) +"\nMEDIA DE INSTRUCOES: " + String.format("%.1f",(double)e_instrucoes/e_quantum) +  "\nQUANTUM: "+ _quantum);
     }
 }
