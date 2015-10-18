@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.util.*;
 
@@ -164,9 +163,7 @@ public class Escalonador {
             //Ao comecar a rodar, o processo perde um credito
             prox.creditos--;
 
-            
-
-                //Decrementa o tempo de espera dos processos bloqueados e se terminou, devolve-os a fila de prontos
+            //Decrementa o tempo de espera dos processos bloqueados e se terminou, devolve-os a fila de prontos
             //Isso deve acontecer antes que o processo em execucao seja terminado, pois ele pode acabar na fila de espera
             decrementarEspera();
             e_quantum++;
@@ -179,8 +176,8 @@ public class Escalonador {
                     if (e.getMessage().equals("E")) {
                         log.write("E/S iniciada em " + titulo);
                         System.out.println("E/S iniciada em " + titulo);
-                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
-                        System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
+                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + getInstrName(indQuantum+1));
+                        System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + getInstrName(indQuantum+1));
                         e_instrucoes+=indQuantum + 1;
                         //Salvar o contexto
                         Processador.getContexto(prox);
@@ -197,8 +194,7 @@ public class Escalonador {
                     }
 
                     if (e.getMessage().equals("S")) {
-                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
-                        System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
+                    	//Na saída, não é necessário constar como uma interrupção
                         log.write(titulo + " terminado. X = " + Processador.X + ". Y = " + Processador.Y);
                         System.out.println(titulo + " terminado. X = " + Processador.X + ". Y = " + Processador.Y);
                         e_instrucoes+=indQuantum + 1;
@@ -214,8 +210,8 @@ public class Escalonador {
             }
             //Se a execucao parou porque o quantum terminou e o processo nao foi finalizado, entao
             if (indQuantum == _quantum && prox.state != Processos.FINALIZADO) {
-                log.write("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
-                System.out.println("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
+                log.write("Interrompendo " + titulo + " apos " + _quantum + getInstrName(_quantum));
+                System.out.println("Interrompendo " + titulo + " apos " + _quantum + getInstrName(_quantum));
                 e_instrucoes+=indQuantum;
                 prox.state = Processos.PRONTO;
                 //Salvar o contexto
@@ -270,8 +266,8 @@ public class Escalonador {
                     if (e.getMessage().equals("E")) {
                         log.write("E/S iniciada em " + titulo);
                         System.out.println("E/S iniciada em " + titulo);
-                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
-                        System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
+                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + getInstrName(indQuantum+1));
+                        System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + getInstrName(indQuantum+1));
                         e_instrucoes+=indQuantum + 1;
                         //Salvar o contexto
                         Processador.getContexto(prox);
@@ -288,8 +284,8 @@ public class Escalonador {
                     }
 
                     if (e.getMessage().equals("S")) {
-                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
-                        System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
+                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + getInstrName(indQuantum+1));
+                        System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + getInstrName(indQuantum+1));
                         log.write(titulo + " terminado. X = " + Processador.X + ". Y = " + Processador.Y);
                         System.out.println(titulo + " terminado. X = " + Processador.X + ". Y = " + Processador.Y);
                         e_instrucoes+=indQuantum + 1;
@@ -305,8 +301,8 @@ public class Escalonador {
             }
             //Se a execucao parou porque o quantum terminou e o processo nao foi finalizado, entao
             if (indQuantum == _quantum && prox.state != Processos.FINALIZADO) {
-                log.write("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
-                System.out.println("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
+                log.write("Interrompendo " + titulo + " apos " + _quantum + getInstrName(_quantum));
+                System.out.println("Interrompendo " + titulo + " apos " + _quantum + getInstrName(_quantum));
                 e_instrucoes+=indQuantum;
                 prox.state = Processos.PRONTO;
                 //Salvar o contexto
@@ -369,7 +365,19 @@ public class Escalonador {
             Bloqueado prox = b.next();
             prox.p.creditos = prox.p.prioridade;
         }
+        
+        //Ordenar a fila por prioridades
+        Collections.sort(filaProntos, new CompareCreditos<BCP>());
 
+    }
+    
+    //Método "perfumaria" para imprimir singular ou plural
+    public static String getInstrName(int num)
+    {
+    	if(num==1)
+    		return " instrucao";
+    	else
+    		return " instrucoes";
     }
     
     public static void inicializarQuantum()
