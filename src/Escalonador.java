@@ -10,13 +10,15 @@ public class Escalonador {
     private static List<Bloqueado> filaBloqueados;
 
     //Variavel que especifica o tamanho do quantum
-    private static int _quantum;
+    static int _quantum;
 
     //Metodo para inicializar as filas
     public static void inicializaFilas() {
         filaProntos = new ArrayList<>();
         filaBloqueados = new ArrayList<>();
     }
+    static Logger log;
+    
     
     //Estatisticas
     static int e_trocas=0;
@@ -68,13 +70,9 @@ public class Escalonador {
 
         for (int i = 0; i <= arquivos.length - 1; i++) {
             //Se o arquivo for o quantum, guarda-lo
-            if (arquivos[i].getName().equals("quantum.txt")) {
-                quantum = arquivos[i];
+            if (arquivos[i].getName().equals("quantum.txt")|| arquivos[i].getName().equals("prioridades.txt")) {
+                //Informacoes ja carregadas
             } else {
-                if (arquivos[i].getName().equals("prioridades.txt")) {
-                    //O arquivo de prioridades ja foi buscado no in�cio
-                    //Isso eh soh para nao deixar o leitor entrar nele
-                } else {
                     //Carregar os processos em mem�ria, um a um
                     myReader = new FileReader(arquivos[i]);
                     myBuffer = new BufferedReader(myReader);
@@ -99,7 +97,7 @@ public class Escalonador {
                     instrucoes.clear();
                     myBuffer.close();
                 }
-            }
+            
         }
         //Fechar o buffer de leitura de prioridades
         bufferedPriorityReader.close();
@@ -111,23 +109,12 @@ public class Escalonador {
         while (it.hasNext()) {
             bcp_processo = it.next();
             titulo = Processos.getTitulo(bcp_processo);
-
+            log.write("Carregando " + titulo);
             System.out.println("Carregando " + titulo);
         }
-
-        //Ler o quantum
-        FileReader quantumFileReader;
-        BufferedReader buffQuantumFileReader;
-
-        quantumFileReader = new FileReader(quantum);
-        buffQuantumFileReader = new BufferedReader(quantumFileReader);
-
-        //Atribuir o valor do quantum e fechar o buffer de leitura
-        _quantum = Integer.valueOf(buffQuantumFileReader.readLine());
-        buffQuantumFileReader.close();
     }
 
-    public static void escalonar() {
+    public static void escalonar() throws IOException {
         int indQuantum;
         String titulo = "";
         BCP prox = null;
@@ -167,7 +154,8 @@ public class Escalonador {
             tituloAnterior = titulo;
 
             //Mudar o estado para EXECUTANDO
-            prox.state = Processos.EXECUTANDO;       
+            prox.state = Processos.EXECUTANDO;
+            log.write("Executando " + titulo);
             System.out.println("Executando " + titulo);
 
             //Transferir o contexto do BCP para o processador
@@ -189,7 +177,9 @@ public class Escalonador {
                     Processador.processar();
                 } catch (Exception e) {
                     if (e.getMessage().equals("E")) {
+                        log.write("E/S iniciada em " + titulo);
                         System.out.println("E/S iniciada em " + titulo);
+                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
                         System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
                         e_instrucoes+=indQuantum + 1;
                         //Salvar o contexto
@@ -207,7 +197,9 @@ public class Escalonador {
                     }
 
                     if (e.getMessage().equals("S")) {
+                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
                         System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
+                        log.write(titulo + " terminado. X = " + Processador.X + ". Y = " + Processador.Y);
                         System.out.println(titulo + " terminado. X = " + Processador.X + ". Y = " + Processador.Y);
                         e_instrucoes+=indQuantum + 1;
                         //Remover o processo da tabela de processos
@@ -222,6 +214,7 @@ public class Escalonador {
             }
             //Se a execucao parou porque o quantum terminou e o processo nao foi finalizado, entao
             if (indQuantum == _quantum && prox.state != Processos.FINALIZADO) {
+                log.write("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
                 System.out.println("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
                 e_instrucoes+=indQuantum;
                 prox.state = Processos.PRONTO;
@@ -240,7 +233,7 @@ public class Escalonador {
 
     }
     
-    public static void escalonarEspecial()
+    public static void escalonarEspecial() throws IOException
     {
         int indQuantum;
         String titulo = "";
@@ -257,7 +250,8 @@ public class Escalonador {
             tituloAnterior = titulo;
 
             //Mudar o estado para EXECUTANDO
-            prox.state = Processos.EXECUTANDO;       
+            prox.state = Processos.EXECUTANDO;
+            log.write("Executando " + titulo);
             System.out.println("Executando " + titulo);
 
             //Transferir o contexto do BCP para o processador
@@ -274,7 +268,9 @@ public class Escalonador {
                     Processador.processar();
                 } catch (Exception e) {
                     if (e.getMessage().equals("E")) {
+                        log.write("E/S iniciada em " + titulo);
                         System.out.println("E/S iniciada em " + titulo);
+                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
                         System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
                         e_instrucoes+=indQuantum + 1;
                         //Salvar o contexto
@@ -292,7 +288,9 @@ public class Escalonador {
                     }
 
                     if (e.getMessage().equals("S")) {
+                        log.write("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
                         System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
+                        log.write(titulo + " terminado. X = " + Processador.X + ". Y = " + Processador.Y);
                         System.out.println(titulo + " terminado. X = " + Processador.X + ". Y = " + Processador.Y);
                         e_instrucoes+=indQuantum + 1;
                         //Remover o processo da tabela de processos
@@ -307,6 +305,7 @@ public class Escalonador {
             }
             //Se a execucao parou porque o quantum terminou e o processo nao foi finalizado, entao
             if (indQuantum == _quantum && prox.state != Processos.FINALIZADO) {
+                log.write("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
                 System.out.println("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
                 e_instrucoes+=indQuantum;
                 prox.state = Processos.PRONTO;
@@ -372,9 +371,29 @@ public class Escalonador {
         }
 
     }
+    
+    public static void inicializarQuantum()
+    {
+        String quantum = "processos\\quantum.txt";
+        //Ler o quantum
+        FileReader quantumFileReader;
+        BufferedReader buffQuantumFileReader;
+        try{
+        quantumFileReader = new FileReader(quantum);
+        buffQuantumFileReader = new BufferedReader(quantumFileReader);
+
+        //Atribuir o valor do quantum e fechar o buffer de leitura
+        _quantum = Integer.valueOf(buffQuantumFileReader.readLine());
+        buffQuantumFileReader.close();
+        }catch(Exception e)
+        {
+            System.out.println("Nao foi possivel ler o quantum");
+        }
+    }
 
     public static void main(String[] args) throws IOException {
-
+        inicializarQuantum();
+        log = new Logger();
         //Inicializar conjuntos
         inicializaFilas();
         Processos.inicializaTabela();
@@ -387,6 +406,7 @@ public class Escalonador {
             escalonar();
         }
         //Estatisticas
+        log.write(("MEDIA DE TROCAS: " + String.format("%.1f",(double)e_trocas/e_processos) +"\nMEDIA DE INSTRUCOES: " + String.format("%.1f",(double)e_instrucoes/e_quantum) +  "\nQUANTUM: "+ _quantum));
         System.out.println("MEDIA DE TROCAS: " + String.format("%.1f",(double)e_trocas/e_processos) +"\nMEDIA DE INSTRUCOES: " + String.format("%.1f",(double)e_instrucoes/e_quantum) +  "\nQUANTUM: "+ _quantum);
     }
 }
