@@ -138,17 +138,9 @@ public class Escalonador {
             
             //Pegar o primeiro da fila, se ela n�o estiver vazia
             prox = i.next();
-           
-            //Pegar o titulo do processo
-            titulo = Processos.getTitulo(prox);
-            if(!titulo.equals(tituloAnterior)) e_trocas++;
-            tituloAnterior = titulo;
-
-            //Mudar o estado para EXECUTANDO
-            prox.state = Processos.EXECUTANDO;
             
              //Verifica os creditos do processo sendo executado, se ele ja era 0, verifica se eh necessaria a redistribuicao
-            if (prox.creditos < 0) {
+            if (prox.creditos == 0) {
                 //Verifica se ha processos com creditos na fila de bloqueados
                 Iterator<Bloqueado> b = filaBloqueados.iterator();
                 boolean zerou = true;
@@ -163,10 +155,19 @@ public class Escalonador {
                     prox.state = Processos.PRONTO;
                     redistribuirCreditos();
                     return;
+                }else{
+                    escalonarEspecial();
+                    return;
                 }
-                prox.state = Processos.PRONTO;
             }
             
+            //Pegar o titulo do processo
+            titulo = Processos.getTitulo(prox);
+            if(!titulo.equals(tituloAnterior)) e_trocas++;
+            tituloAnterior = titulo;
+
+            //Mudar o estado para EXECUTANDO
+            prox.state = Processos.EXECUTANDO;       
             System.out.println("Executando " + titulo);
 
             //Transferir o contexto do BCP para o processador
@@ -223,8 +224,9 @@ public class Escalonador {
             if (indQuantum == _quantum && prox.state != Processos.FINALIZADO) {
                 System.out.println("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
                 e_instrucoes+=indQuantum;
+                prox.state = Processos.PRONTO;
                 //Salvar o contexto
-                Processador.getContexto(prox);
+                Processador.getContexto(prox); 
             }
         } else {
             //Quando nao ha processos Prontos
@@ -235,11 +237,95 @@ public class Escalonador {
         //reordenar a fila
         Collections.sort(filaProntos, new CompareCreditos<BCP>());
         
-        //Voltando o estado do processo a pronto
-        if(prox != null && prox.state == Processos.EXECUTANDO)
-            prox.state = Processos.PRONTO;
-        
 
+    }
+    
+    public static void escalonarEspecial()
+    {
+        int indQuantum;
+        String titulo = "";
+        BCP prox = null;
+        
+        Iterator<BCP> b = filaProntos.iterator();
+        prox = b.next();
+        
+        while(prontosZerados())
+        {
+            //Pegar o titulo do processo
+            titulo = Processos.getTitulo(prox);
+            if(!titulo.equals(tituloAnterior)) e_trocas++;
+            tituloAnterior = titulo;
+
+            //Mudar o estado para EXECUTANDO
+            prox.state = Processos.EXECUTANDO;       
+            System.out.println("Executando " + titulo);
+
+            //Transferir o contexto do BCP para o processador
+            Processador.setContexto(prox);
+            
+            //Decrementa o tempo de espera dos processos bloqueados e se terminou, devolve-os a fila de prontos
+            //Isso deve acontecer antes que o processo em execucao seja terminado, pois ele pode acabar na fila de espera
+            decrementarEspera();
+            e_quantum++;
+            //Em seguida executar um quantum de instrucoes
+            for (indQuantum = 0; indQuantum < _quantum; indQuantum++) {
+                
+                try {
+                    Processador.processar();
+                } catch (Exception e) {
+                    if (e.getMessage().equals("E")) {
+                        System.out.println("E/S iniciada em " + titulo);
+                        System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
+                        e_instrucoes+=indQuantum + 1;
+                        //Salvar o contexto
+                        Processador.getContexto(prox);
+
+                        //Trocar o estado do processo para bloqueado
+                        prox.state = Processos.BLOQUEADO;
+
+                        //Tirar o processo da fila de prontos e p�r na fila de bloqueados
+                        filaProntos.remove(prox);
+                        filaBloqueados.add(new Bloqueado(prox));
+
+                        //Interromper o quantum
+                        break;
+                    }
+
+                    if (e.getMessage().equals("S")) {
+                        System.out.println("Interrompendo " + titulo + " apos " + (indQuantum + 1) + " instrucoes");
+                        System.out.println(titulo + " terminado. X = " + Processador.X + ". Y = " + Processador.Y);
+                        e_instrucoes+=indQuantum + 1;
+                        //Remover o processo da tabela de processos
+                        Processos.tabelaDeProcessos.remove(prox);
+
+                        //Remover o processo da fila de prontos
+                        filaProntos.remove(prox);
+                        //Mudar o estado para diferencia-los dos terminos de quantum enquanto o processo ainda nao terminou
+                        prox.state = Processos.FINALIZADO;
+                    }
+                }
+            }
+            //Se a execucao parou porque o quantum terminou e o processo nao foi finalizado, entao
+            if (indQuantum == _quantum && prox.state != Processos.FINALIZADO) {
+                System.out.println("Interrompendo " + titulo + " apos " + _quantum + " instrucoes");
+                e_instrucoes+=indQuantum;
+                prox.state = Processos.PRONTO;
+                //Salvar o contexto
+                Processador.getContexto(prox); 
+            }
+            else {
+                //Quando nao ha processos Prontos
+                //Decrementa o tempo de espera dos metodos bloqueados
+                decrementarEspera();
+            }
+            if(b.hasNext())
+                prox = b.next();
+            else{
+                b = filaProntos.iterator();
+                prox = b.next();
+            }
+        }
+        
     }
 
     //Metodo responsavel por decrementar o tempo de espera dos processos bloqueados
@@ -256,6 +342,18 @@ public class Escalonador {
             }
         }
 
+    }
+    
+    //Metodo verifica se prontos estao com os creditos zerados
+    public static boolean prontosZerados()
+    {
+        Iterator<BCP> b = filaProntos.iterator();
+        
+        while(b.hasNext())
+            if(b.next().creditos > 0)
+                return false;
+        
+        return true;
     }
 
     //Metodo para redistribuir creditos aos processos
