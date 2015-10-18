@@ -14,8 +14,8 @@ public class Escalonador {
 
     //Metodo para inicializar as filas
     public static void inicializaFilas() {
-        filaProntos = new ArrayList<>();
-        filaBloqueados = new ArrayList<>();
+        filaProntos = new ArrayList<BCP>();
+        filaBloqueados = new ArrayList<Bloqueado>();
     }
     static Logger log;
     
@@ -408,5 +408,8 @@ public class Escalonador {
         //Estatisticas
         log.write(("MEDIA DE TROCAS: " + String.format("%.1f",(double)e_trocas/e_processos) +"\nMEDIA DE INSTRUCOES: " + String.format("%.1f",(double)e_instrucoes/e_quantum) +  "\nQUANTUM: "+ _quantum));
         System.out.println("MEDIA DE TROCAS: " + String.format("%.1f",(double)e_trocas/e_processos) +"\nMEDIA DE INSTRUCOES: " + String.format("%.1f",(double)e_instrucoes/e_quantum) +  "\nQUANTUM: "+ _quantum);
+        
+        //Fechar o arquivo
+        log.close();
     }
 }

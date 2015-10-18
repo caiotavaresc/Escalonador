@@ -13,6 +13,18 @@ public class Logger {
     }
     public void write(String x) throws IOException
     {
-        l.write(x);
+        l.write(x + "\n");
+    }
+    
+    public void close()
+    {
+    	try
+    	{
+    		l.close();
+    	}
+    	catch(IOException e)
+    	{
+    		System.out.println("Nao foi possivel fechar o arquivo de log.");
+    	}
     }
 }
